@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.3.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2024-04-21T21:39:10+08:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">胡思劼的Blog</title><subtitle>我是胡思劼，来自上海。我本科就读于上海对外经贸大学数据科学与大数据技术专业， 硕士在华东师范大学数据科学与工程学院就读，目前主要的研究方向是数据系统方向~</subtitle><entry><title type="html">【学习笔记】levelDB的memTable</title><link href="http://localhost:4000/study/2024/04/14/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-levelDB%E7%9A%84memTable.html" rel="alternate" type="text/html" title="【学习笔记】levelDB的memTable" /><published>2024-04-14T00:00:00+08:00</published><updated>2024-04-14T00:00:00+08:00</updated><id>http://localhost:4000/study/2024/04/14/%E3%80%90%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E3%80%91levelDB%E7%9A%84memTable</id><content type="html" xml:base="http://localhost:4000/study/2024/04/14/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-levelDB%E7%9A%84memTable.html"><![CDATA[<p>这周继续学习levelDB的源码，参考了源码本身以及各大博主所发布的博客，写了这篇学习笔记。这次着重关注于其比较核心的“存储层”部分中的内存表Memtable，这是其内存数据库的一个模块。</p>
+<h2 id="memtable类的简介">Memtable类的简介</h2>
+<p>Memtable本身的数据结构是跳表（Skiplist），它的类的定义中自带了一个比较器（Comparator）。每次写操作时，LevelDB会将“编码后”的数据插入Memtable，编码后的数据结构的相关解释可见下图：<br />
+<img src="/assets/LookupKey.png" alt="my alternate text" /></p>
+
+<p align="center">
+图1：编码后的LookUpKey
+</p>
+
+<p>因此，Memtable的写入操作，也即Skiplist的插入操作，上一篇博客中已经介绍过很详细的Skiplist数据结构的创建、插入和删除等操作的原理与实现了，这里就不再赘述了。<br />
+以下是Memtable这个类的主要的定义代码：</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">MemTable</span> <span class="p">{</span>
+ <span class="nl">private:</span>
+
+  <span class="k">struct</span> <span class="nc">KeyComparator</span> <span class="p">{</span>        <span class="cm">/* 用于作key比较的一个结构体类型 */</span>
+    <span class="k">const</span> <span class="n">InternalKeyComparator</span> <span class="n">comparator</span><span class="p">;</span>
+    <span class="k">explicit</span> <span class="n">KeyComparator</span><span class="p">(</span><span class="k">const</span> <span class="n">InternalKeyComparator</span><span class="o">&amp;</span> <span class="n">c</span><span class="p">)</span> <span class="o">:</span> <span class="n">comparator</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="p">{}</span>
+    <span class="kt">int</span> <span class="k">operator</span><span class="p">()(</span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">a</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">b</span><span class="p">)</span> <span class="k">const</span><span class="p">;</span>
+  <span class="p">};</span>
+
+  <span class="c1">//menTable本身的表的数据结构，实际上是Skiplist（跳表）结构</span>
+  <span class="k">typedef</span> <span class="n">SkipList</span><span class="o">&lt;</span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span><span class="p">,</span> <span class="n">KeyComparator</span><span class="o">&gt;</span> <span class="n">Table</span><span class="p">;</span> 
+  <span class="n">KeyComparator</span> <span class="n">comparator_</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">refs_</span><span class="p">;</span> <span class="c1">// 引用计数</span>
+  <span class="n">Arena</span> <span class="n">arena_</span><span class="p">;</span> <span class="c1">// 内存管理的对象</span>
+  <span class="n">Table</span> <span class="n">table_</span><span class="p">;</span> <span class="c1">// menTable本身所代表的表</span>
+
+<span class="k">public</span><span class="o">:</span>
+  <span class="cm">/* 估计大约的内存使用情况 */</span>
+  <span class="kt">size_t</span> <span class="nf">ApproximateMemoryUsage</span><span class="p">();</span>
+
+  <span class="cm">/* 自带的迭代器 */</span>
+  <span class="n">Iterator</span><span class="o">*</span> <span class="nf">NewIterator</span><span class="p">();</span>
+
+  <span class="cm">/* 加入memTable一个内容 */</span>
+  <span class="kt">void</span> <span class="nf">Add</span><span class="p">(</span><span class="n">SequenceNumber</span> <span class="n">seq</span><span class="p">,</span> <span class="n">ValueType</span> <span class="n">type</span><span class="p">,</span> <span class="k">const</span> <span class="n">Slice</span><span class="o">&amp;</span> <span class="n">key</span><span class="p">,</span> <span class="k">const</span> <span class="n">Slice</span><span class="o">&amp;</span> <span class="n">value</span><span class="p">);</span>
+
+  <span class="cm">/* 取得memTable的一个内容 */</span>
+  <span class="kt">bool</span> <span class="nf">Get</span><span class="p">(</span><span class="k">const</span> <span class="n">LookupKey</span><span class="o">&amp;</span> <span class="n">key</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">*</span> <span class="n">value</span><span class="p">,</span> <span class="n">Status</span><span class="o">*</span> <span class="n">s</span><span class="p">);</span>
+<span class="p">};</span>
+
+</code></pre></div></div>
+<p>在 LevelDB 的内部结构中，memTable 扮演了非常重要的角色。其主要作用如下：</p>
+
+<h4 id="写入缓存">写入缓存：</h4>
+<p>LevelDB 的写操作首先会将数据写入到 memTable 中。这样，新写入的数据会先保存在内存中，而不是直接写入到磁盘上。这种设计可以大大提高写操作的性能，因为内存的读写速度远远快于磁盘。</p>
+<h4 id="合并与排序">合并与排序：</h4>
+<p>在 memTable 中，数据并不是直接按照键值顺序存储的。但是，当 memTable 达到一定大小或者需要进行持久化操作时，它会将数据按照键值顺序进行排序，并合并成一个新的、有序的、不可变的数据结构（通常称为 SSTable）。这个过程有助于优化后续的读取操作，因为数据已经是按照键值顺序排列的。</p>
+<h4 id="减少磁盘-io">减少磁盘 I/O：</h4>
+<p>通过将新写入的数据暂时保存在 memTable 中，LevelDB 可以减少频繁的磁盘 I/O 操作。仅当memTable 达到一定大小或者需要进行持久化时，才会触发磁盘写入操作。这种批处理的方式可以大大提高系统的整体性能。</p>
+<h4 id="支持并发写入">支持并发写入：</h4>
+<p>LevelDB 支持并发写入操作，而 memTable 的设计使得这种并发写入成为可能。每个写入操作都可以在其自己的 memTable 中进行，而不需要等待其他写入操作完成。这种设计使得 LevelDB 能够更好地处理高并发的写入场景。</p>]]></content><author><name></name></author><category term="study" /><summary type="html"><![CDATA[这周继续学习levelDB的源码，参考了源码本身以及各大博主所发布的博客，写了这篇学习笔记。这次着重关注于其比较核心的“存储层”部分中的内存表Memtable，这是其内存数据库的一个模块。 Memtable类的简介 Memtable本身的数据结构是跳表（Skiplist），它的类的定义中自带了一个比较器（Comparator）。每次写操作时，LevelDB会将“编码后”的数据插入Memtable，编码后的数据结构的相关解释可见下图：]]></summary></entry><entry><title type="html">【学习笔记】生成式AI模型</title><link href="http://localhost:4000/study/2024/04/11/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E7%94%9F%E6%88%90%E5%BC%8FAI%E6%A8%A1%E5%9E%8B.html" rel="alternate" type="text/html" title="【学习笔记】生成式AI模型" /><published>2024-04-11T00:00:00+08:00</published><updated>2024-04-11T00:00:00+08:00</updated><id>http://localhost:4000/study/2024/04/11/%E3%80%90%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E3%80%91%E7%94%9F%E6%88%90%E5%BC%8FAI%E6%A8%A1%E5%9E%8B</id><content type="html" xml:base="http://localhost:4000/study/2024/04/11/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E7%94%9F%E6%88%90%E5%BC%8FAI%E6%A8%A1%E5%9E%8B.html"><![CDATA[<h2 id="生成式ai模型简介">生成式AI模型简介</h2>
+<p>生成式模型（Generative Model）是机器学习中的一种重要模型类型，又称概率模型。它的核心原理是通过学习数据的分布来建立概率模型，进而利用这个模型来生成新的数据。生成式模型不仅关注已有数据的分类，更将数据的生成看作是一个从先验分布中抽取样本的过程。
+Generative Model的主要生成过程见下图，其中蕴含了几个不同的类型的样本和生成的效果：
+<img src="/assets/ff07e9deae1a8045a3319690074a17d.jpg" alt="my alternate text" /></p>
+
+<p align="center">
+图1：生成式AI的概述
+</p>
+
+<h2 id="不同类型的生成式ai模型">不同类型的生成式AI模型</h2>
+<p>Generative Model的模型种类也多种多样，分为”VAE”, “Flow-based”, “Diffusion”和“GAN”这几种。</p>
+
+<h3 id="-vae变分自编码器">· VAE（变分自编码器）</h3>
+<div class="language-markdown highlighter-rouge"><div class="highlight"><pre class="highlight"><code>VAE（变分自编码器）是一种生成模型，是自编码器的一种变体。它结合了自编码器的数据压缩与重  
+构能力，并引入概率分布的假设，使得模型能够生成新的数据。VAE的核心思想是将输入数据映射到  
+一个潜在空间中，并在该空间中进行采样以生成数据。这种潜在空间通常建模为一个高斯分布，使  
+得VAE能够通过学习分布的参数来生成新的样本。然而，VAE的训练过程相对复杂，需要较多的计算  
+资源和时间。
+</code></pre></div></div>
+<p><img src="/assets/84f99942012b8d43b3b966eeee456c0.jpg" alt="my alternate text" /></p>
+
+<p align="center">
+图2：VAE的基本示意图
+</p>
+
+<h3 id="-flow-based-model">· Flow-based Model</h3>
+<div class="language-markdown highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Flow-based模型是一种用于概率建模的方法，尤其在生成模型或密度估计中表现出色。其主要思想  
+是通过一系列的可逆变换来生成数据，这些变换可以看作是从一个初始分布逐步转换到目标分布的  
+过程。由于这些变换是可逆的，因此可以使用神经网络来有效地实现它们。Flow-based模型相比于  
+传统生成模型具有更高的灵活性和效率。
+</code></pre></div></div>
+<p><img src="/assets/bb86b464f1137e1e91cb62a1722888d.jpg" alt="my alternate text" /></p>
+
+<p align="center">
+图3：Flow-based的基本示意图
+</p>
+
+<h3 id="-diffusion">· Diffusion</h3>
+<div class="language-markdown highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Diffusion模型在深度学习和人工智能领域中广泛应用于生成高质量、逼真的数据，尤其在图像生  
+成方  面取得了显著成效。该模型的基本思想是从一个随机的噪声数据开始，逐步将其转化为有意  
+义的数据（如图像）。这个过程模拟了物理中的扩散现象，包括正向过程（将真实数据逐渐添加  
+噪声转化为噪声）和逆向过程（从纯噪声中逐步去除噪声恢复成结构化的数据）。Diffusion模型  
+能够生成非常高质量和逼真的图像，因此在艺术创作、数据增强和模型训练等领域具有广泛的应  
+用价值。
+</code></pre></div></div>
+<p><img src="/assets/139e8baa8536310fee5934a0e1acb7b.jpg" alt="my alternate text" /></p>
+
+<p align="center">
+图4：Diffusion的基本示意图
+</p>
+
+<h3 id="-gan">· GAN</h3>
+<div class="language-markdown highlighter-rouge"><div class="highlight"><pre class="highlight"><code>GAN是一种深度学习模型，通过生成模型（G）和判别模型（D）之间的对抗学习来产生高质量的输  
+出。判别模型的任务是区分一个样本是真实的还是由生成模型生成的，而生成模型则试图生成能  
+够欺骗判别模型的样本。这两个模型在训练过程中相互竞争，最终达到一个平衡点，此时生成模型  
+能够生成与真实数据难以区分的样本。GAN在图像生成、语音合成和文本生成等领域都有广泛的  
+应用。
+</code></pre></div></div>
+<p><img src="/assets/d61836a973fd61fc364e7f599cc5cb4.jpg" alt="my alternate text" /></p>
+
+<p align="center">
+图5：GAN的基本示意图
+</p>
+
+<p>总的来说，生成式模型具有广泛的应用前景和研究价值，能够处理大规模、高维的数据，并生成更加真实、高质量的样本。然而，它也存在一些挑战，如模型的复杂性、计算资源的消耗以及数据的质量和多样性等问题，需要持续的研究和改进。</p>]]></content><author><name></name></author><category term="study" /><summary type="html"><![CDATA[生成式AI模型简介 生成式模型（Generative Model）是机器学习中的一种重要模型类型，又称概率模型。它的核心原理是通过学习数据的分布来建立概率模型，进而利用这个模型来生成新的数据。生成式模型不仅关注已有数据的分类，更将数据的生成看作是一个从先验分布中抽取样本的过程。 Generative Model的主要生成过程见下图，其中蕴含了几个不同的类型的样本和生成的效果：]]></summary></entry><entry><title type="html">个人简介 - “欢迎来到我的主页”</title><link href="http://localhost:4000/others/2024/04/10/%E4%B8%AA%E4%BA%BA%E7%AE%80%E4%BB%8B.html" rel="alternate" type="text/html" title="个人简介 - “欢迎来到我的主页”" /><published>2024-04-10T00:00:00+08:00</published><updated>2024-04-10T00:00:00+08:00</updated><id>http://localhost:4000/others/2024/04/10/%E4%B8%AA%E4%BA%BA%E7%AE%80%E4%BB%8B</id><content type="html" xml:base="http://localhost:4000/others/2024/04/10/%E4%B8%AA%E4%BA%BA%E7%AE%80%E4%BB%8B.html"><![CDATA[<p>大家好！欢迎来到我的主页，我是胡思劼。<br />
+关于我：</p>
+<h4 id="-来自上海">· 来自上海。</h4>
+<h4 id="-本科就读于上海对外经贸大学数据科学与大数据技术专业">· 本科就读于上海对外经贸大学，数据科学与大数据技术专业</h4>
+<h4 id="-硕士在华东师范大学数据科学与工程学院就读">· 硕士在华东师范大学数据科学与工程学院就读</h4>
+<h4 id="-目前主要的研究方向是数据系统方向">· 目前主要的研究方向是数据系统方向~</h4>
+<p>······<br />
+我个人喜爱小动物，我的家中养了一只黄色的柴犬，经常逗他玩，下面是我家狗子的美照，供大家欣赏：</p>
+
+<h3 id="狗子惊讶">狗子惊讶</h3>
+<p><img src="/assets/1.jpg" alt="my alternate text" /></p>
+
+<h3 id="狗子的凝视">狗子的凝视</h3>
+<p><img src="/assets/2.jpg" alt="my alternate text" /></p>
+
+<h3 id="狗子躺平">狗子躺平</h3>
+<p><img src="/assets/3.jpg" alt="my alternate text" /></p>
+
+<h3 id="狗子玩耍">狗子玩耍</h3>
+<p><img src="/assets/4.jpg" alt="my alternate text" /></p>
+
+<h3 id="以下再展示一些我个人的生活照和游玩照">以下再展示一些我个人的生活照和游玩照：</h3>
+<p>简单的一次自驾旅行，路途比较近，看看反光镜中的晚霞~
+<img src="/assets/11.jpg" alt="my alternate text" />
+我和朋友的自拍，在舟山海边，因为朋友有点介意就用狗子盖上啦。
+<img src="/assets/12.jpg" alt="my alternate text" />
+我在临港南汇嘴自拍了，平时几乎不拍，可能那天天气好、心情好。
+<img src="/assets/13.jpg" alt="my alternate text" />
+和本科的朋友们的合照，这是一次毕业旅行，庆祝美好的本科阶段落下了帷幕。
+<img src="/assets/14.jpg" alt="my alternate text" /></p>]]></content><author><name></name></author><category term="others" /><summary type="html"><![CDATA[大家好！欢迎来到我的主页，我是胡思劼。 关于我： · 来自上海。 · 本科就读于上海对外经贸大学，数据科学与大数据技术专业 · 硕士在华东师范大学数据科学与工程学院就读 · 目前主要的研究方向是数据系统方向~ ······ 我个人喜爱小动物，我的家中养了一只黄色的柴犬，经常逗他玩，下面是我家狗子的美照，供大家欣赏：]]></summary></entry></feed>

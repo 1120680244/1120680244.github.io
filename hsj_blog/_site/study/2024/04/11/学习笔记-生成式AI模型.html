@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>【学习笔记】生成式AI模型 | 胡思劼的Blog</title>
+<meta name="generator" content="Jekyll v4.3.3" />
+<meta property="og:title" content="【学习笔记】生成式AI模型" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="生成式AI模型简介 生成式模型（Generative Model）是机器学习中的一种重要模型类型，又称概率模型。它的核心原理是通过学习数据的分布来建立概率模型，进而利用这个模型来生成新的数据。生成式模型不仅关注已有数据的分类，更将数据的生成看作是一个从先验分布中抽取样本的过程。 Generative Model的主要生成过程见下图，其中蕴含了几个不同的类型的样本和生成的效果：" />
+<meta property="og:description" content="生成式AI模型简介 生成式模型（Generative Model）是机器学习中的一种重要模型类型，又称概率模型。它的核心原理是通过学习数据的分布来建立概率模型，进而利用这个模型来生成新的数据。生成式模型不仅关注已有数据的分类，更将数据的生成看作是一个从先验分布中抽取样本的过程。 Generative Model的主要生成过程见下图，其中蕴含了几个不同的类型的样本和生成的效果：" />
+<link rel="canonical" href="http://localhost:4000/study/2024/04/11/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E7%94%9F%E6%88%90%E5%BC%8FAI%E6%A8%A1%E5%9E%8B.html" />
+<meta property="og:url" content="http://localhost:4000/study/2024/04/11/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E7%94%9F%E6%88%90%E5%BC%8FAI%E6%A8%A1%E5%9E%8B.html" />
+<meta property="og:site_name" content="胡思劼的Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-04-11T00:00:00+08:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="【学习笔记】生成式AI模型" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2024-04-11T00:00:00+08:00","datePublished":"2024-04-11T00:00:00+08:00","description":"生成式AI模型简介 生成式模型（Generative Model）是机器学习中的一种重要模型类型，又称概率模型。它的核心原理是通过学习数据的分布来建立概率模型，进而利用这个模型来生成新的数据。生成式模型不仅关注已有数据的分类，更将数据的生成看作是一个从先验分布中抽取样本的过程。 Generative Model的主要生成过程见下图，其中蕴含了几个不同的类型的样本和生成的效果：","headline":"【学习笔记】生成式AI模型","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/study/2024/04/11/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E7%94%9F%E6%88%90%E5%BC%8FAI%E6%A8%A1%E5%9E%8B.html"},"url":"http://localhost:4000/study/2024/04/11/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E7%94%9F%E6%88%90%E5%BC%8FAI%E6%A8%A1%E5%9E%8B.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="胡思劼的Blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">胡思劼的Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About me</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">【学习笔记】生成式AI模型</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2024-04-11T00:00:00+08:00" itemprop="datePublished">Apr 11, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h2 id="生成式ai模型简介">生成式AI模型简介</h2>
+<p>生成式模型（Generative Model）是机器学习中的一种重要模型类型，又称概率模型。它的核心原理是通过学习数据的分布来建立概率模型，进而利用这个模型来生成新的数据。生成式模型不仅关注已有数据的分类，更将数据的生成看作是一个从先验分布中抽取样本的过程。
+Generative Model的主要生成过程见下图，其中蕴含了几个不同的类型的样本和生成的效果：
+<img src="/assets/ff07e9deae1a8045a3319690074a17d.jpg" alt="my alternate text" /></p>
+
+<p align="center">
+图1：生成式AI的概述
+</p>
+
+<h2 id="不同类型的生成式ai模型">不同类型的生成式AI模型</h2>
+<p>Generative Model的模型种类也多种多样，分为”VAE”, “Flow-based”, “Diffusion”和“GAN”这几种。</p>
+
+<h3 id="-vae变分自编码器">· VAE（变分自编码器）</h3>
+<div class="language-markdown highlighter-rouge"><div class="highlight"><pre class="highlight"><code>VAE（变分自编码器）是一种生成模型，是自编码器的一种变体。它结合了自编码器的数据压缩与重  
+构能力，并引入概率分布的假设，使得模型能够生成新的数据。VAE的核心思想是将输入数据映射到  
+一个潜在空间中，并在该空间中进行采样以生成数据。这种潜在空间通常建模为一个高斯分布，使  
+得VAE能够通过学习分布的参数来生成新的样本。然而，VAE的训练过程相对复杂，需要较多的计算  
+资源和时间。
+</code></pre></div></div>
+<p><img src="/assets/84f99942012b8d43b3b966eeee456c0.jpg" alt="my alternate text" /></p>
+
+<p align="center">
+图2：VAE的基本示意图
+</p>
+
+<h3 id="-flow-based-model">· Flow-based Model</h3>
+<div class="language-markdown highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Flow-based模型是一种用于概率建模的方法，尤其在生成模型或密度估计中表现出色。其主要思想  
+是通过一系列的可逆变换来生成数据，这些变换可以看作是从一个初始分布逐步转换到目标分布的  
+过程。由于这些变换是可逆的，因此可以使用神经网络来有效地实现它们。Flow-based模型相比于  
+传统生成模型具有更高的灵活性和效率。
+</code></pre></div></div>
+<p><img src="/assets/bb86b464f1137e1e91cb62a1722888d.jpg" alt="my alternate text" /></p>
+
+<p align="center">
+图3：Flow-based的基本示意图
+</p>
+
+<h3 id="-diffusion">· Diffusion</h3>
+<div class="language-markdown highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Diffusion模型在深度学习和人工智能领域中广泛应用于生成高质量、逼真的数据，尤其在图像生  
+成方  面取得了显著成效。该模型的基本思想是从一个随机的噪声数据开始，逐步将其转化为有意  
+义的数据（如图像）。这个过程模拟了物理中的扩散现象，包括正向过程（将真实数据逐渐添加  
+噪声转化为噪声）和逆向过程（从纯噪声中逐步去除噪声恢复成结构化的数据）。Diffusion模型  
+能够生成非常高质量和逼真的图像，因此在艺术创作、数据增强和模型训练等领域具有广泛的应  
+用价值。
+</code></pre></div></div>
+<p><img src="/assets/139e8baa8536310fee5934a0e1acb7b.jpg" alt="my alternate text" /></p>
+
+<p align="center">
+图4：Diffusion的基本示意图
+</p>
+
+<h3 id="-gan">· GAN</h3>
+<div class="language-markdown highlighter-rouge"><div class="highlight"><pre class="highlight"><code>GAN是一种深度学习模型，通过生成模型（G）和判别模型（D）之间的对抗学习来产生高质量的输  
+出。判别模型的任务是区分一个样本是真实的还是由生成模型生成的，而生成模型则试图生成能  
+够欺骗判别模型的样本。这两个模型在训练过程中相互竞争，最终达到一个平衡点，此时生成模型  
+能够生成与真实数据难以区分的样本。GAN在图像生成、语音合成和文本生成等领域都有广泛的  
+应用。
+</code></pre></div></div>
+<p><img src="/assets/d61836a973fd61fc364e7f599cc5cb4.jpg" alt="my alternate text" /></p>
+
+<p align="center">
+图5：GAN的基本示意图
+</p>
+
+<p>总的来说，生成式模型具有广泛的应用前景和研究价值，能够处理大规模、高维的数据，并生成更加真实、高质量的样本。然而，它也存在一些挑战，如模型的复杂性、计算资源的消耗以及数据的质量和多样性等问题，需要持续的研究和改进。</p>
+
+  </div><a class="u-url" href="/study/2024/04/11/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E7%94%9F%E6%88%90%E5%BC%8FAI%E6%A8%A1%E5%9E%8B.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">胡思劼的Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">胡思劼的Blog</li><li><a class="u-email" href="mailto:51265903082@stu.ecnu.edu.cn">51265903082@stu.ecnu.edu.cn</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/1120680244_hsj"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">1120680244_hsj</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>我是胡思劼，来自上海。我本科就读于上海对外经贸大学数据科学与大数据技术专业， 硕士在华东师范大学数据科学与工程学院就读，目前主要的研究方向是数据系统方向~</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
