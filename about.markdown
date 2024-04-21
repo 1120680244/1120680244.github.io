@@ -1,18 +1,58 @@
 ---
-layout: page
-title: About me
-permalink: /about/
+layout: post
+title: 个人简介 - “欢迎来到我的主页”
+date:   2024-04-10
+categories: others
 ---
 
-This is the base Jekyll theme. You can find out more info about customizing your Jekyll theme, as well as basic Jekyll usage documentation at [jekyllrb.com](https://jekyllrb.com/)
+大家好！欢迎来到我的主页，我是胡思劼。  
+关于我：  
+#### · 来自上海。
+#### · 本科就读于上海对外经贸大学，数据科学与大数据技术专业
+#### · 硕士在华东师范大学数据科学与工程学院就读
+#### · 目前主要的研究方向是数据系统方向~  
+······  
 
-You can find the source code for Minima at GitHub:
-[jekyll][jekyll-organization] /
-[minima](https://github.com/jekyll/minima)
+```cpp  
+#include <iostream>
+using namespace jekyll;
 
-You can find the source code for Jekyll at GitHub:
-[jekyll][jekyll-organization] /
-[jekyll](https://github.com/jekyll/jekyll)
+int main()
+{
+  printf("你好!我是胡思劼.");
+}
+```
 
+我个人喜爱小动物，我的家中养了一只黄色的柴犬，经常逗他玩，下面是我家狗子的美照，供大家欣赏：
 
-[jekyll-organization]: https://github.com/jekyll
+### 狗子惊讶
+![my alternate text](/assets/1.jpg)
+<br> 
+
+### 狗子的凝视
+![my alternate text](/assets/2.jpg)
+<br> 
+
+### 狗子躺平
+![my alternate text](/assets/3.jpg)
+<br> 
+
+### 狗子玩耍
+![my alternate text](/assets/4.jpg)
+<br> 
+
+### 以下再展示一些我个人的生活照和游玩照：
+简单的一次自驾旅行，路途比较近，看看反光镜中的晚霞~
+![my alternate text](/assets/11.jpg)
+<br> 
+
+我和朋友的自拍，在舟山海边，因为朋友有点介意就用狗子盖上啦。
+![my alternate text](/assets/12.jpg)
+<br> 
+
+我在临港南汇嘴自拍了，平时几乎不拍，可能那天天气好、心情好。
+![my alternate text](/assets/13.jpg)
+<br> 
+
+和本科的朋友们的合照，这是一次毕业旅行，庆祝美好的本科阶段落下了帷幕。
+![my alternate text](/assets/14.jpg)
